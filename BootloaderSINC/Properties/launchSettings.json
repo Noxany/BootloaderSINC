@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BootloaderSINC": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\chris\\Documents\\AppDirectory\""
+    }
+  }
+}
