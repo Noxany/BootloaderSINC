@@ -7,11 +7,14 @@ namespace BootloaderSINC
 {
     internal class Program
     {
+        private const string DefaultFileName = "SampleApplication.exe";
+        private const string DefaultApiUrl = "https://localhost:7229/";
+
         static async Task Main(string[] args)
         {
-            var localPath = args.Length > 0 ? args[0] ?? Environment.CurrentDirectory : Environment.CurrentDirectory;
-            var fileName = args.Length > 1 ? args[1] ?? "SampleApplication.exe" : "SampleApplication.exe";
-            var apiUrl = args.Length > 2 ? args[2] ?? "https://localhost:7229/" : "https://localhost:7229/";
+            var localPath = GetArgumentOrDefault(args, 0, Environment.CurrentDirectory);
+            var fileName = GetArgumentOrDefault(args, 1, DefaultFileName);
+            var apiUrl = GetArgumentOrDefault(args, 2, DefaultApiUrl);
 
             var filePath = Path.Combine(localPath, fileName);
 
@@ -23,11 +26,10 @@ namespace BootloaderSINC
 
             if(!currentVersion.Equals(serverVersionNumber,StringComparison.InvariantCultureIgnoreCase))
             {
-                var serverVersion = await updaterService.GetVersion(serverVersionNumber);
-                await File.WriteAllBytesAsync(filePath, serverVersion);
+                await UpdateApplication(filePath, updaterService, serverVersionNumber);
             }
 
-            using var process = Process.Start(filePath);
+            LaunchApplication(filePath);
         }
 
         private static string GetFileVersion(string filePath)
@@ -40,6 +42,22 @@ namespace BootloaderSINC
             {
                 return String.Empty;
             }
+        }
+
+        private static string GetArgumentOrDefault(string[] args, int index, string defaultValue)
+        {
+            return args.Length > index ? args[index] ?? defaultValue : defaultValue;
+        }
+
+        private static async Task UpdateApplication(string filePath, WebApiUpdateService updaterService, string serverVersionNumber)
+        {
+            var serverVersion = await updaterService.GetVersion(serverVersionNumber);
+            await File.WriteAllBytesAsync(filePath, serverVersion);
+        }
+
+        private static void LaunchApplication(string filePath)
+        {
+            using var process = Process.Start(filePath);
         }
     }
 }
