@@ -1,4 +1,5 @@
 ﻿using AppUpdaterIStorage;
+using Microsoft.Extensions.Configuration;
 using System.Data.SqlTypes;
 using System.IO;
 
@@ -6,7 +7,13 @@ namespace AppUpdaterStoreage
 {
     public class FilesystemUpdateStorage : IUpdateStorage
     {
-        private readonly string versionDirectory = "C:\\SampleApplication";
+        private readonly string versionDirectory = String.Empty;
+
+        public FilesystemUpdateStorage(IConfiguration configuration)
+        {
+            if(configuration != null)
+                versionDirectory = configuration["VersionDirectory"];
+        }
 
         public async Task<string> GetCurrentVersionNumber()
         {
@@ -18,31 +25,22 @@ namespace AppUpdaterStoreage
             }
 
             return String.Empty;
-            //var highestLocalVerison = from directory in new DirectoryInfo(versionDirectory).GetDirectories().OrderByDescending(n => n.Name)
-            //                          where directory.EnumerateFiles().Any(f => f.Extension == ".exe")
-            //                          select directory;
-            //return highestLocalVerison?.FirstOrDefault()?.Name ?? String.Empty;
         }
 
         public async Task<byte[]> GetVersion(string version)
         {
-            var requestVersion = from directory in new DirectoryInfo(versionDirectory).GetDirectories().Where(n => n.Name == version)
-                                 where directory.EnumerateFiles().Any(f => f.Extension == ".exe")
-                                 select directory;
+            var directory = new DirectoryInfo(versionDirectory).GetDirectories()
+                .FirstOrDefault(n => n.Name.Equals(version, StringComparison.InvariantCultureIgnoreCase) 
+                && n.EnumerateFiles().Any(f => f.Extension == ".exe"));
 
-            if(!requestVersion.Any())
+            if(directory == null)
                 return Array.Empty<byte>();
 
             using var memStream = new MemoryStream();
 
-            await requestVersion.FirstOrDefault()
-                                .EnumerateFiles()
-                                .FirstOrDefault(f => f.Extension == ".exe")
-                                .OpenRead()
-                                .CopyToAsync(memStream);
+            await directory.EnumerateFiles().First(f => f.Extension == ".exe").OpenRead().CopyToAsync(memStream);
 
             return memStream.ToArray();
-
         }
     }
 }
