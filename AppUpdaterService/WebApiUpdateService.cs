@@ -9,7 +9,12 @@ namespace AppUpdaterService
 {
     public class WebApiUpdateService : IUpdateService
     {
-        private const string apiUrl = "https://localhost:7229/UpdateService/";
+        private readonly string apiUrl = "UpdateService/";
+
+        public WebApiUpdateService(string apiUrl)
+        {
+            this.apiUrl = apiUrl + this.apiUrl;
+        }
 
         public async Task<string> GetCurrentVersionNumber()
         {

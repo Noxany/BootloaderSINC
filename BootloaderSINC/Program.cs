@@ -11,12 +11,13 @@ namespace BootloaderSINC
         {
             var localPath = args.Length > 0 ? args[0] ?? Environment.CurrentDirectory : Environment.CurrentDirectory;
             var fileName = args.Length > 1 ? args[1] ?? "SampleApplication.exe" : "SampleApplication.exe";
+            var apiUrl = args.Length > 2 ? args[2] ?? "https://localhost:7229/" : "https://localhost:7229/";
 
             var filePath = Path.Combine(localPath, fileName);
 
             var currentVersion = GetFileVersion(filePath);
 
-            var updaterService = new WebApiUpdateService();
+            var updaterService = new WebApiUpdateService(apiUrl);
 
             var serverVersionNumber = await updaterService.GetCurrentVersionNumber();
 
